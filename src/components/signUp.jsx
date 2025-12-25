@@ -26,9 +26,9 @@ export const SignUp = () => {
          {/* <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20"></div> */}
 
         {/* Content */}
-        <div className="relative z-10 w-full max-w-md px-6 py-12 animate-fade-in  ">
+        <div className="relative z-10 w-full max-w-md px-6  animate-fade-in  ">
           {/* Logo */}
-          <div className="text-center mb-8 animate-slide-down">
+          <div className="text-center  animate-slide-down">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg mb-4 transform hover:scale-110 transition-transform duration-300">
               <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -38,15 +38,34 @@ export const SignUp = () => {
               Welcome Back
             </h2>
             <p className="-300 text-sm">
-              Sign in to continue your journey
+              Sign Up to continue your journey
             </p>
           </div>
 
           {/* Form */}
           <div className="space-y-5 animate-slide-up">
+             {/* Email Name */}
+            <div className="transform hover:scale-[1.02] transition-transform duration-200">
+              <label htmlFor="name" className="block text-sm font-medium -200 ">
+                Name
+              </label>
+              <div className="relative">
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  autoComplete="name"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 shadow-sm focus:shadow-lg focus:shadow-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
+                  placeholder="Mota Bhai"
+                />
+              </div>
+            </div>
             {/* Email Field */}
             <div className="transform hover:scale-[1.02] transition-transform duration-200">
-              <label htmlFor="email" className="block text-sm font-medium -200 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium -200 ">
                 Email address
               </label>
               <div className="relative">
@@ -64,18 +83,12 @@ export const SignUp = () => {
               </div>
             </div>
 
-            {/* Password Field */}
+              {/* Password Field */}
             <div className="transform hover:scale-[1.02] transition-transform duration-200">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between ">
                 <label htmlFor="password" className="block text-sm font-medium ">
                   Password
                 </label>
-                <a
-                  href="#"
-                  className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors duration-200"
-                >
-                  Forgot?
-                </a>
               </div>
               <div className="relative">
                 <input
@@ -86,8 +99,48 @@ export const SignUp = () => {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
+                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-500 placeholder-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
                   placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+ {/* Age Field */}
+            <div className="transform hover:scale-[1.02] transition-transform duration-200">
+              <label htmlFor="age" className="block text-sm font-medium -200 ">
+                Age
+              </label>
+              <div className="relative">
+                <input
+                  id="age"
+                  name="age"
+                  type="number"
+                  required
+                  autoComplete="age"
+                  // value={age}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
+                  placeholder="Type your Age"
+                />
+              </div>
+            </div>
+
+             {/* experince Field */}
+            <div className="transform hover:scale-[1.02] transition-transform duration-200">
+              <label htmlFor="experince" className="block text-sm font-medium -200 ">
+                Experince
+              </label>
+              <div className="relative">
+                <input
+                  id="experince"
+                  name="experince"
+                  type="number"
+                  required
+                  autoComplete="experince"
+                  // value={experince}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
+                  placeholder="Type your Experince"
                 />
               </div>
             </div>
@@ -97,7 +150,7 @@ export const SignUp = () => {
               onClick={handleSubmit}
               className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-indigo-500/50 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-transparent"
             >
-              Sign in
+              Sign Up
             </button>
           </div>
 
@@ -113,26 +166,6 @@ export const SignUp = () => {
           </p>
         </div>
       </div>
-
-      {/* Right Side - Image */}
-      {/* <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        <img
-          src={pic4}
-          alt="Background"
-          className="absolute inset-0 w-full h-full object-cover animate-scale-in"
-        /> */}
-       
-        
-        {/* Overlay Content */}
-        {/* <div className="absolute inset-0 flex items-center justify-center p-12 mb-55">
-          <div className="text-center  animate-fade-in-delay">
-            <h1 className="text-5xl font-bold mb-4">Start Your Journey</h1>
-            <p className="text-xl max-w-md mx-auto">
-              Join thousands of users who trust our platform for their daily needs
-            </p>
-          </div>
-        </div>
-      </div> */}
 
       <style jsx>{`
         @keyframes blob {
