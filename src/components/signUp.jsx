@@ -1,19 +1,31 @@
 import React, { useState } from 'react';
 import pic2 from "../assets/pic2.jpg"
+import { useNavigate } from 'react-router-dom';
 // import pic4 from "../assets/pic4.jpg"
 
 export const SignUp = () => {
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  // const [age, setAge] = useState('');
+  const [experince, setExperince] = useState('');
+  const [showPassword , setShowPassword]= useState(false)
+  const navigate = useNavigate()
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted:', { email, password });
+    console.log('Form submitted:', { email,name, password , experince });
   };
+  const passwordVisibility = ()=>{
+    setShowPassword(!showPassword )
+  }
+
+  const redirectToSignIn=()=>{
+    navigate('/sign-in')
+  }
 
   return (
     <>
-     {/* <div className="flex min-h-screen m-20 border rounded-4xl p-10"> */}
       {/* Left Side - Sign In Form with Background */}
       <div className="min-h-screen relative w-full flex items-center justify-center  ">
         {/* Background Image */}
@@ -23,7 +35,6 @@ export const SignUp = () => {
             backgroundImage: `url(${pic2})`,
           }}
         />
-         {/* <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20"></div> */}
 
         {/* Content */}
         <div className="relative z-10 w-full max-w-md px-6  animate-fade-in  ">
@@ -46,7 +57,7 @@ export const SignUp = () => {
           <div className="space-y-5 animate-slide-up">
              {/* Email Name */}
             <div className="transform hover:scale-[1.02] transition-transform duration-200">
-              <label htmlFor="name" className="block text-sm font-medium -200 ">
+              <label htmlFor="name" className="block text-sm font-medium -200 mb-2">
                 Name
               </label>
               <div className="relative">
@@ -56,8 +67,8 @@ export const SignUp = () => {
                   type="text"
                   required
                   autoComplete="name"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 shadow-sm focus:shadow-lg focus:shadow-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
                   placeholder="Mota Bhai"
                 />
@@ -65,7 +76,7 @@ export const SignUp = () => {
             </div>
             {/* Email Field */}
             <div className="transform hover:scale-[1.02] transition-transform duration-200">
-              <label htmlFor="email" className="block text-sm font-medium -200 ">
+              <label htmlFor="email" className="block text-sm font-medium -200 mb-2">
                 Email address
               </label>
               <div className="relative">
@@ -77,7 +88,7 @@ export const SignUp = () => {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
+                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 shadow-sm focus:shadow-lg focus:shadow-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
                   placeholder="you@example.com"
                 />
               </div>
@@ -86,7 +97,7 @@ export const SignUp = () => {
               {/* Password Field */}
             <div className="transform hover:scale-[1.02] transition-transform duration-200">
               <div className="flex items-center justify-between ">
-                <label htmlFor="password" className="block text-sm font-medium ">
+                <label htmlFor="password" className="block text-sm font-medium mb-2">
                   Password
                 </label>
               </div>
@@ -94,20 +105,36 @@ export const SignUp = () => {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword? 'text' : "password"}
                   required
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-500 placeholder-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
+                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 shadow-sm focus:shadow-lg focus:shadow-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={passwordVisibility}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-indigo-400 hover:text-indigo-300 focus:outline-none"
+                >
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
               </div>
             </div>
 
  {/* Age Field */}
-            <div className="transform hover:scale-[1.02] transition-transform duration-200">
-              <label htmlFor="age" className="block text-sm font-medium -200 ">
+            {/* <div className="transform hover:scale-[1.02] transition-transform duration-200">
+              <label htmlFor="age" className="block text-sm font-medium -200 mb-2">
                 Age
               </label>
               <div className="relative">
@@ -118,16 +145,16 @@ export const SignUp = () => {
                   required
                   autoComplete="age"
                   // value={age}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
+                  onChange={(e) => setAge(e.target.value)}
+                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 shadow-sm focus:shadow-lg focus:shadow-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
                   placeholder="Type your Age"
                 />
               </div>
-            </div>
+            </div> */}
 
              {/* experince Field */}
             <div className="transform hover:scale-[1.02] transition-transform duration-200">
-              <label htmlFor="experince" className="block text-sm font-medium -200 ">
+              <label htmlFor="experince" className="block text-sm font-medium -200 mb-2">
                 Experince
               </label>
               <div className="relative">
@@ -138,8 +165,8 @@ export const SignUp = () => {
                   required
                   autoComplete="experince"
                   // value={experince}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
+                  onChange={(e) => setExperince(e.target.value)}
+                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 shadow-sm focus:shadow-lg focus:shadow-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
                   placeholder="Type your Experince"
                 />
               </div>
@@ -155,13 +182,14 @@ export const SignUp = () => {
           </div>
 
           {/* Sign Up Link */}
-          <p className="mt-8 text-center text-sm text-gray-300 animate-fade-in">
-            Don't have an account?{' '}
+          <p className="mt-8 text-center text-sm text-gray-400 animate-fade-in">
+            Already have an account?{"   "}
             <a
               href="#"
               className="font-semibold text-indigo-400 hover:text-indigo-300 transition-colors duration-200"
+              onClick={redirectToSignIn}
             >
-              Start free trial
+              Login with your Account
             </a>
           </p>
         </div>
@@ -242,7 +270,6 @@ export const SignUp = () => {
           animation: scale-in 20s ease-out infinite alternate;
         }
       `}</style>
-     {/* </div> */}
     </>
   );
 };
