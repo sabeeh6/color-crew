@@ -1,30 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import pic2 from "../assets/pic2.jpg";
 import { useNavigate } from 'react-router-dom';
 
 export const SignIn = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate()
-  // Debug (optional)
-  useEffect(() => {
-    console.log('Email:', email, 'Password:', password);
-  }, [email, password]);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Sign In submitted:', { email, password });
-    // Yahan API call etc. karo
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm();
+
+  const onSubmit = async (data) => {
+    console.log('Form Data:', data); // { email: '...', password: '...' }
+    // API call here
+    // await loginUser(data.email, data.password);
+    // navigate('/dashboard');
   };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const redirectToSignUp=()=>{
-    navigate('/sign-up')
-  }
 
   return (
     <>
@@ -44,16 +38,13 @@ export const SignIn = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h2 className="text-3xl font-bold text-Black mb-2">
-              Welcome Back
-            </h2>
-            <p className="text-Black-300 text-sm">
-              Sign in to continue your journey
-            </p>
+            <h2 className="text-3xl font-bold text-Black mb-2">Welcome Back</h2>
+            <p className="text-Black-300 text-sm">Sign in to continue your journey</p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5 animate-slide-up">
+          {/* ✅ handleSubmit wraps your onSubmit */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 animate-slide-up">
+
             {/* Email Field */}
             <div className="transform hover:scale-[1.02] transition-transform duration-200">
               <label htmlFor="signin-email" className="block text-sm font-medium text-black-200 mb-2">
@@ -62,47 +53,53 @@ export const SignIn = () => {
               <div className="relative">
                 <input
                   id="signin-email"
-                  name="email"
                   type="email"
-                  required
                   autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 shadow-sm focus:shadow-lg focus:shadow-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
                   placeholder="you@example.com"
+                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 shadow-sm focus:shadow-lg focus:shadow-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
+                  // ✅ register replaces value + onChange + useState
+                  {...register('email', {
+                    required: 'Email is required',
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: 'Enter a valid email address',
+                    },
+                  })}
                 />
               </div>
+              {/* ✅ Automatic error message */}
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
+              )}
             </div>
 
-            {/* Password Field with Show/Hide Toggle */}
+            {/* Password Field */}
             <div className="transform hover:scale-[1.02] transition-transform duration-200">
               <div className="flex items-center justify-between mb-2">
                 <label htmlFor="signin-password" className="block text-sm font-medium text-black-200">
                   Password
                 </label>
-                <a
-                  href="#"
-                  className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors duration-200"
-                >
-                  {/* Forgot? */}
-                </a>
               </div>
               <div className="relative">
                 <input
                   id="signin-password"
-                  name="password"
                   type={showPassword ? 'text' : 'password'}
-                  required
                   autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 shadow-sm focus:shadow-lg focus:shadow-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
                   placeholder="••••••••"
+                  className="block w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-indigo-800 placeholder-indigo-400 shadow-sm focus:shadow-lg focus:shadow-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:bg-white/15"
+                  // ✅ register with validation rules
+                  {...register('password', {
+                    required: 'Password is required',
+                    minLength: {
+                      value: 6,
+                      message: 'Password must be at least 6 characters',
+                    },
+                  })}
                 />
-                {/* Eye Icon Toggle */}
+                {/* Eye Toggle */}
                 <button
                   type="button"
-                  onClick={togglePasswordVisibility}
+                  onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 flex items-center px-3 text-indigo-400 hover:text-indigo-300 focus:outline-none"
                 >
                   {showPassword ? (
@@ -117,63 +114,46 @@ export const SignIn = () => {
                   )}
                 </button>
               </div>
+              {/* ✅ Automatic error message */}
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>
+              )}
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-indigo-500/50 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-transparent"
+              disabled={isSubmitting}
+              className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-indigo-500/50 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Sign in
+              {/* ✅ isSubmitting automatically tracks loading state */}
+              {isSubmitting ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
 
           {/* Sign Up Link */}
           <p className="mt-8 text-center text-sm text-gray-300 animate-fade-in">
             Don't have an account?{'  '}
-            <a
-              href="#"
+            
+            <a  href="#"
               className="font-semibold text-indigo-400 hover:text-indigo-300 transition-colors duration-200"
-              onClick={redirectToSignUp}
+              onClick={() => navigate('/sign-up')}
             >
               Create Your Account
             </a>
           </p>
         </div>
-      </div>
+      
 
-      {/* Animations (same as before) */}
       <style jsx>{`
-        @keyframes blob {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slide-down {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes scale-in {
-          from { transform: scale(1.1); }
-          to { transform: scale(1); }
-        }
-        .animate-blob { animation: blob 7s infinite; }
-        .animation-delay-2000 { animation-delay: 2s; }
-        .animation-delay-4000 { animation-delay: 4s; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slide-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fade-in 1s ease-out; }
-        .animate-fade-in-delay { animation: fade-in 1s ease-out 0.3s both; }
         .animate-slide-down { animation: slide-down 0.8s ease-out; }
         .animate-slide-up { animation: slide-up 0.8s ease-out 0.2s both; }
-        .animate-scale-in { animation: scale-in 20s ease-out infinite alternate; }
       `}</style>
+    </div>
     </>
   );
 };
