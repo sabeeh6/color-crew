@@ -1,0 +1,82 @@
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
+@import "tailwindcss";
+
+/* ─── Base Reset ─────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-neutral-950  text-neutral-100 antialiased;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-neutral-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-neutral-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-violet-600;
+  }
+}
+
+/* ─── Utility Classes ────────────────────────────────────────────────────── */
+@layer utilities {
+  /* Prevent canvas touch scroll interference */
+  .canvas-container {
+    touch-action: none;
+  }
+
+  /* Smooth panel transitions */
+  .panel-slide {
+    transition: width 0.25s ease, opacity 0.25s ease;
+  }
+
+  /* Checkerboard background for transparent canvas areas */
+  .checkerboard {
+    background-image:
+      linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+      linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+      linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  }
+
+  /* Glow effect for active tool */
+  .tool-active-glow {
+    box-shadow: 0 0 12px 2px rgba(139, 92, 246, 0.4);
+  }
+}
+
+/* ─── Fabric.js Canvas Overrides ─────────────────────────────────────────── */
+/* Ensure Fabric canvas wrapper fills its container */
+.canvas-container canvas {
+  display: block;
+}
+
+/* Remove default Fabric.js border */
+.canvas-container {
+  border: none !important;
+}
