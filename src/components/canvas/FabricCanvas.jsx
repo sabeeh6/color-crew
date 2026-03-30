@@ -1,6 +1,7 @@
 import { useCanvas }       from '../../hooks/useCanvas';
 import { useCanvasEvents }  from '../../hooks/useCanvasEvents';
 import { useZoom }          from '../../hooks/useZoom';
+import { useToolPropertiesSync } from '../../hooks/useToolPropertiesSync';
 
 /**
  * FabricCanvas
@@ -13,6 +14,7 @@ const FabricCanvas = () => {
   const { canvasElRef } = useCanvas();
   useCanvasEvents();
   useZoom();
+  useToolPropertiesSync();
 
   return (
     <div

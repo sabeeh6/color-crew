@@ -1,73 +1,106 @@
-
 // src/hooks/useUndoRedo.js
-import { useRef, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { getCanvasInstance } from '../utils/canvasSingleton';
 import { setCanUndo, setCanRedo } from '../store/slices/canvasSlice';
 
 const HISTORY_LIMIT = 50;
 
+// Extract state out of the react hook instance so it behaves as a global/singleton store.
+// This resolves the bug where CanvasToolbar and useCanvasEvents had different useRef instances!
+let globalHistoryStack = [];
+let globalRedoStack = [];
+let isMutatingGlobal = false;
+
 export const useUndoRedo = () => {
   const dispatch = useDispatch();
-  const historyStack = useRef([]);   // array of JSON strings
-  const redoStack = useRef([]);
-  const isMutating = useRef(false);  // prevent recursive saves
 
   const saveState = useCallback(() => {
     const canvas = getCanvasInstance();
-    if (!canvas || isMutating.current) return;
+    if (!canvas || isMutatingGlobal) return;
 
     const snapshot = JSON.stringify(
       canvas.toJSON(['id', 'name', 'customType'])
     );
 
-    historyStack.current.push(snapshot);
-
-    // Cap history to limit memory usage
-    if (historyStack.current.length > HISTORY_LIMIT) {
-      historyStack.current.shift();
+    // Skip if snapshot is identical to the last one (prevents double-save bugs)
+    if (globalHistoryStack.length > 0 && globalHistoryStack[globalHistoryStack.length - 1] === snapshot) {
+      return;
     }
 
-    redoStack.current = [];
-    dispatch(setCanUndo(historyStack.current.length > 1));
+    globalHistoryStack.push(snapshot);
+
+    // Cap history to limit memory usage
+    if (globalHistoryStack.length > HISTORY_LIMIT) {
+      globalHistoryStack.shift();
+    }
+
+    globalRedoStack = [];
+    dispatch(setCanUndo(globalHistoryStack.length > 1));
     dispatch(setCanRedo(false));
   }, [dispatch]);
 
   const undo = useCallback(async () => {
     const canvas = getCanvasInstance();
-    if (!canvas || historyStack.current.length <= 1) return;
+    if (!canvas || globalHistoryStack.length <= 1) return;
 
-    isMutating.current = true;
-    const currentState = historyStack.current.pop();
-    redoStack.current.push(currentState);
+    isMutatingGlobal = true;
+    const currentState = globalHistoryStack.pop();
+    globalRedoStack.push(currentState);
 
-    const previousState = historyStack.current[historyStack.current.length - 1];
+    const previousState = globalHistoryStack[globalHistoryStack.length - 1];
     if (previousState) {
       // v6: loadFromJSON returns a Promise
       await canvas.loadFromJSON(JSON.parse(previousState));
       canvas.renderAll();
     }
 
-    dispatch(setCanUndo(historyStack.current.length > 1));
-    dispatch(setCanRedo(redoStack.current.length > 0));
-    isMutating.current = false;
+    dispatch(setCanUndo(globalHistoryStack.length > 1));
+    dispatch(setCanRedo(globalRedoStack.length > 0));
+    isMutatingGlobal = false;
   }, [dispatch]);
 
   const redo = useCallback(async () => {
     const canvas = getCanvasInstance();
-    if (!canvas || redoStack.current.length === 0) return;
+    if (!canvas || globalRedoStack.length === 0) return;
 
-    isMutating.current = true;
-    const nextState = redoStack.current.pop();
-    historyStack.current.push(nextState);
+    isMutatingGlobal = true;
+    const nextState = globalRedoStack.pop();
+    globalHistoryStack.push(nextState);
 
     await canvas.loadFromJSON(JSON.parse(nextState));
     canvas.renderAll();
 
-    dispatch(setCanUndo(historyStack.current.length > 1));
-    dispatch(setCanRedo(redoStack.current.length > 0));
-    isMutating.current = false;
+    dispatch(setCanUndo(globalHistoryStack.length > 1));
+    dispatch(setCanRedo(globalRedoStack.length > 0));
+    isMutatingGlobal = false;
   }, [dispatch]);
 
-  return { saveState, undo, redo, historyStack, redoStack };
+  // Listen to keyboard shortcuts dispatched from DrawingPage (CustomEvents)
+  useEffect(() => {
+    const handleUndo = () => {
+       if (globalHistoryStack.length > 1) undo();
+    };
+    const handleRedo = () => {
+       if (globalRedoStack.length > 0) redo();
+    };
+
+    document.addEventListener('canvas:undo', handleUndo);
+    document.addEventListener('canvas:redo', handleRedo);
+
+    return () => {
+      document.removeEventListener('canvas:undo', handleUndo);
+      document.removeEventListener('canvas:redo', handleRedo);
+    };
+  }, [undo, redo]);
+
+  // Return getters for current objects so earlier callers like `useCanvasEvents` don't break
+  return { 
+     saveState, 
+     undo, 
+     redo, 
+     // simulate ref.current accessor behavior just in case
+     historyStack: { get current() { return globalHistoryStack; } }, 
+     redoStack: { get current() { return globalRedoStack; } } 
+  };
 };

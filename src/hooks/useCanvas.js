@@ -6,11 +6,13 @@ import {
   setCanvasInstance,
   destroyCanvasInstance,
 } from '../utils/canvasSingleton';
+import { useUndoRedo } from './useUndoRedo';
 import { setZoomLevel } from '../store/slices/canvasSlice';
 
 export const useCanvas = () => {
   const canvasElRef = useRef(null);
   const dispatch = useDispatch();
+  const { saveState } = useUndoRedo();
 
   useEffect(() => {
     if (!canvasElRef.current) return;
@@ -27,6 +29,9 @@ export const useCanvas = () => {
 
     // Store in singleton — accessible from all hooks
     setCanvasInstance(fabricCanvas);
+
+    // Save initial empty state for undo
+    saveState();
 
     // Keep Redux zoom in sync
     dispatch(setZoomLevel(1));

@@ -2,9 +2,16 @@ import { createSlice } from '@reduxjs/toolkit';
 
 // Rehydrate from localStorage on app boot
 const tokenFromStorage = localStorage.getItem('colorCrewToken') || null;
-const userFromStorage = localStorage.getItem('colorCrewUser')
-  ? JSON.parse(localStorage.getItem('colorCrewUser'))
-  : null;
+let userFromStorage = null;
+try {
+  const storedUser = localStorage.getItem('colorCrewUser');
+  if (storedUser && storedUser !== 'undefined') {
+    userFromStorage = JSON.parse(storedUser);
+  }
+} catch (error) {
+  console.error('Failed to parse user from localStorage:', error);
+}
+
 
 const initialState = {
   user: userFromStorage,

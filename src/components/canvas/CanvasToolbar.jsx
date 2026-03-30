@@ -2,8 +2,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import {
   Undo2, Redo2, Save, Download, FileText,
-  Trash2, Palette, Loader2
+  Trash2, Palette, Loader2, ArrowLeft
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   selectCanUndo,
   selectCanRedo,
@@ -18,6 +19,7 @@ import { useDrawingTools } from '../../hooks/useDrawingTools';
 import { openModal }    from '../../store/slices/uiSlice';
 
 const CanvasToolbar = () => {
+  const navigate   = useNavigate();
   const dispatch   = useDispatch();
   const canUndo    = useSelector(selectCanUndo);
   const canRedo    = useSelector(selectCanRedo);
@@ -44,6 +46,14 @@ const CanvasToolbar = () => {
     >
       {/* ── Left: Brand + Title ──────────────────────────────────────── */}
       <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate('/dashboard')}
+          title="Back to Dashboard"
+          className="flex items-center justify-center w-8 h-8 rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors"
+        >
+          <ArrowLeft size={18} />
+        </button>
+
         <div className="w-7 h-7 bg-violet-600 rounded-md flex items-center justify-center">
           <Palette size={14} className="text-white" />
         </div>
