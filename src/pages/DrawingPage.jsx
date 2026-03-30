@@ -169,7 +169,7 @@ const DrawingPage = () => {
         </AnimatePresence>
 
         {/* Center: The Fabric.js Canvas */}
-        <div className="relative flex-1 overflow-hidden">
+        <div className="relative flex-1 h-full w-full overflow-hidden">
           {loadingSketch ? (
             <div className="absolute inset-0 flex items-center justify-center
                             bg-neutral-950 z-10">
@@ -186,6 +186,7 @@ const DrawingPage = () => {
           {/* Zoom Controls (absolute bottom-right of canvas area) */}
           <CanvasZoomControls />
         </div>
+
 
         {/* Right: Properties Panel */}
         <AnimatePresence>

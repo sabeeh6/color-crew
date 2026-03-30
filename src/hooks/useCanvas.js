@@ -17,14 +17,16 @@ export const useCanvas = () => {
   useEffect(() => {
     if (!canvasElRef.current) return;
 
-    // Initialize Fabric.js v6 Canvas
+    const parent = canvasElRef.current.parentElement;
+
+    // Initialize Fabric.js v6 Canvas using parent dimensions
     const fabricCanvas = new Canvas(canvasElRef.current, {
       isDrawingMode: false,
       backgroundColor: '#ffffff',
-      width: window.innerWidth - 300,   // subtract left + right panel widths
-      height: window.innerHeight - 60,  // subtract toolbar height
+      width: parent.clientWidth || 800,
+      height: parent.clientHeight || 600,
       selection: true,
-      allowTouchScrolling: false,       // prevent scroll during touch drawing
+      allowTouchScrolling: false, // prevent scroll during touch drawing
     });
 
     // Store in singleton — accessible from all hooks
@@ -36,21 +38,26 @@ export const useCanvas = () => {
     // Keep Redux zoom in sync
     dispatch(setZoomLevel(1));
 
-    // Handle window resize
-    const handleResize = () => {
-      fabricCanvas.setWidth(window.innerWidth - 300);
-      fabricCanvas.setHeight(window.innerHeight - 60);
-      fabricCanvas.renderAll();
-    };
+    // Responsive resizing using ResizeObserver
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        fabricCanvas.setDimensions({ width, height });
+        fabricCanvas.renderAll();
+      }
+    });
 
-    window.addEventListener('resize', handleResize);
+    if (parent) {
+      resizeObserver.observe(parent);
+    }
 
-    // Cleanup on unmount — required to avoid memory leaks (React StrictMode safe)
+    // Cleanup on unmount — required to avoid memory leaks
     return () => {
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       destroyCanvasInstance(); // v6: dispose() is async-safe
     };
   }, [dispatch]);
+
 
   return { canvasElRef };
 };
