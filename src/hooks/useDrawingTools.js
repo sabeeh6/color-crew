@@ -25,6 +25,7 @@ import {
   selectFontSize,
   selectFontFamily,
 } from '../store/slices/toolSlice';
+import { hexToRgba } from '../utils/colorUtils';
 
 export const useDrawingTools = () => {
   const dispatch = useDispatch();
@@ -42,37 +43,37 @@ export const useDrawingTools = () => {
     const canvas = getCanvasInstance();
     if (!canvas) return;
     const brush = new PencilBrush(canvas);
-    brush.color = strokeColor;
+    brush.color = hexToRgba(strokeColor, opacity);
     brush.width = strokeWidth;
     canvas.freeDrawingBrush = brush;
     canvas.isDrawingMode = true;
     canvas.selection = false;
     dispatch(setActiveTool('pencil'));
-  }, [strokeColor, strokeWidth, dispatch]);
+  }, [strokeColor, strokeWidth, opacity, dispatch]);
 
   const activateSpray = useCallback(() => {
     const canvas = getCanvasInstance();
     if (!canvas) return;
     const brush = new SprayBrush(canvas);
-    brush.color = strokeColor;
+    brush.color = hexToRgba(strokeColor, opacity);
     brush.width = strokeWidth;
     brush.density = brushDensity;
     canvas.freeDrawingBrush = brush;
     canvas.isDrawingMode = true;
     canvas.selection = false;
     dispatch(setActiveTool('spray'));
-  }, [strokeColor, strokeWidth, brushDensity, dispatch]);
+  }, [strokeColor, strokeWidth, opacity, brushDensity, dispatch]);
 
   const activateCircleBrush = useCallback(() => {
     const canvas = getCanvasInstance();
     if (!canvas) return;
     const brush = new CircleBrush(canvas);
-    brush.color = strokeColor;
+    brush.color = hexToRgba(strokeColor, opacity);
     brush.width = strokeWidth;
     canvas.freeDrawingBrush = brush;
     canvas.isDrawingMode = true;
     dispatch(setActiveTool('circle-brush'));
-  }, [strokeColor, strokeWidth, dispatch]);
+  }, [strokeColor, strokeWidth, opacity, dispatch]);
 
   const activateEraser = useCallback(() => {
     const canvas = getCanvasInstance();

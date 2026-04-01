@@ -18,6 +18,7 @@ import {
   selectShadowOffsetX,
   selectShadowOffsetY,
 } from '../store/slices/toolSlice';
+import { hexToRgba } from '../utils/colorUtils';
 
 
 export const useToolPropertiesSync = () => {
@@ -53,7 +54,7 @@ export const useToolPropertiesSync = () => {
     // 1. Update Free Drawing Brush
     if (canvas.isDrawingMode && canvas.freeDrawingBrush) {
       if (['pencil', 'spray', 'circle-brush'].includes(activeTool)) {
-        canvas.freeDrawingBrush.color = strokeColor;
+        canvas.freeDrawingBrush.color = hexToRgba(strokeColor, opacity);
         canvas.freeDrawingBrush.width = strokeWidth;
         canvas.freeDrawingBrush.shadow = shadowObj;
 
