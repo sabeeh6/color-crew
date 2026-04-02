@@ -75,8 +75,11 @@ const PropertiesPanel = () => {
   const shadowOffsetX = useSelector(selectShadowOffsetX);
   const shadowOffsetY = useSelector(selectShadowOffsetY);
 
-  const isBrushTool = ['pencil', 'spray', 'circle-brush', 'eraser'].includes(activeTool);
-  const isSpray = activeTool === 'spray';
+  const isBrushTool = [
+    'pencil', 'ink', 'marker', 'chalk', 'ribbon', 
+    'spray', 'spray-dense', 'circle-brush', 'eraser'
+  ].includes(activeTool);
+  const isSpray = ['spray', 'spray-dense'].includes(activeTool);
   const isShapeTool = [
     'rect', 'circle', 'triangle', 'line', 'star', 'heart', 
     'cloud', 'hexagon', 'ellipse', 'ring', 'arc'
@@ -99,20 +102,22 @@ const PropertiesPanel = () => {
         
         {/* ── Colors ──────────────────────────────────────────────────── */}
         <section className="space-y-6">
-          <div>
-            <SectionTitle Icon={Shield}>{isBrushTool ? 'Brush Color' : 'Stroke Color'}</SectionTitle>
-            <HexColorPicker
-              color={strokeColor}
-              onChange={(c) => dispatch(setStrokeColor(c))}
-              className="!w-full !h-32 mb-3"
-            />
-            <input
-              type="text"
-              value={strokeColor}
-              onChange={(e) => dispatch(setStrokeColor(e.target.value))}
-              className="w-full bg-neutral-800 text-neutral-200 text-xs font-mono rounded-lg px-3 py-2 border border-neutral-700 outline-none focus:border-violet-500 transition-all font-semibold"
-            />
-          </div>
+          {activeTool !== 'blend' && (
+            <div>
+              <SectionTitle Icon={Shield}>{isBrushTool ? 'Brush Color' : 'Stroke Color'}</SectionTitle>
+              <HexColorPicker
+                color={strokeColor}
+                onChange={(c) => dispatch(setStrokeColor(c))}
+                className="!w-full !h-32 mb-3"
+              />
+              <input
+                type="text"
+                value={strokeColor}
+                onChange={(e) => dispatch(setStrokeColor(e.target.value))}
+                className="w-full bg-neutral-800 text-neutral-200 text-xs font-mono rounded-lg px-3 py-2 border border-neutral-700 outline-none focus:border-violet-500 transition-all font-semibold"
+              />
+            </div>
+          )}
 
           {isShapeTool && (
             <div>
@@ -157,7 +162,7 @@ const PropertiesPanel = () => {
             />
           )}
           <SliderRow
-            label="Opacity"
+            label={activeTool === 'blend' ? 'Mix Strength' : 'Opacity'}
             value={opacity}
             min={0}
             max={1}
@@ -236,6 +241,9 @@ const PropertiesPanel = () => {
           </div>
           <p className="text-neutral-400 text-[11px] leading-relaxed">
             {activeTool === 'select'  && 'Click objects to select. Drag to move.'}
+            {activeTool === 'blend'   && 'Blender is active. Drag across colors to smudge them. No color picked needed!'}
+            {isBrushTool && activeTool !== 'eraser' && activeTool !== 'blend' && 'Free-hand drawing is active. Adjust size and opacity below.'}
+            {activeTool === 'eraser'  && 'Eraser is active. Click and drag to remove strokes.'}
             {isShapeTool              && 'Live shape properties are enabled. Change colors or add shadows!'}
             {!activeTool              && 'Select a tool from the sidebar to begin designing.'}
           </p>

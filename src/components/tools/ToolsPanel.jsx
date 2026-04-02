@@ -7,18 +7,28 @@ import {
   Square, Circle, Triangle, Minus, Type, Disc,
   Star, Heart, MoveRight, Hexagon, Orbit,
   CircleDashed, Activity, Shapes as ShapesIcon,
-  ChevronLeft, Cloud
+  ChevronLeft, Cloud, Feather, Highlighter, 
+  Brush, Spline, Waves, Palette, Droplets
 } from 'lucide-react';
 import { selectActiveTool } from '../../store/slices/canvasSlice';
 import { useDrawingTools }  from '../../hooks/useDrawingTools';
 
 const mainTools = [
   { id: 'select',       label: 'Select (V)',       Icon: MousePointer2 },
-  { id: 'pencil',       label: 'Pencil (P)',       Icon: Pencil },
-  { id: 'spray',        label: 'Spray Brush',      Icon: Paintbrush },
-  { id: 'circle-brush', label: 'Round Brush',      Icon: Disc },
   { id: 'eraser',       label: 'Eraser (E)',       Icon: Eraser },
   { id: 'text',         label: 'Text (X)',         Icon: Type },
+];
+
+const brushTools = [
+  { id: 'pencil',       label: 'Pencil',           Icon: Pencil },
+  { id: 'ink',          label: 'Ink Pen',          Icon: Feather },
+  { id: 'marker',       label: 'Marker',           Icon: Highlighter },
+  { id: 'chalk',        label: 'Chalk',            Icon: Brush },
+  { id: 'ribbon',       label: 'Ribbon',           Icon: Spline },
+  { id: 'blend',        label: 'Smudge / Blend',   Icon: Droplets },
+  { id: 'spray',        label: 'Spray (Soft)',     Icon: Paintbrush },
+  { id: 'spray-dense',  label: 'Spray (Dense)',    Icon: Waves },
+  { id: 'circle-brush', label: 'Round Brush',      Icon: Disc },
 ];
 
 const shapeTools = [
@@ -39,7 +49,13 @@ const shapeTools = [
 const toolActionMap = {
   select:         'activateSelect',
   pencil:         'activatePencil',
+  ink:            'activateInk',
+  marker:         'activateMarker',
+  chalk:          'activateChalk',
+  ribbon:         'activateRibbon',
+  blend:          'activateBlend',
   spray:          'activateSpray',
+  'spray-dense':  'activateSprayDense',
   'circle-brush': 'activateCircleBrush',
   eraser:         'activateEraser',
   text:           'addText',
@@ -109,14 +125,62 @@ const ToolsPanel = () => {
             <div className="w-6 h-px bg-neutral-800 my-1" />
 
             <button
+              onClick={() => setView('brushes')}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center
+                         transition-all duration-200 group relative
+                         ${view === 'brushes' || brushTools.some(t => t.id === activeTool)
+                           ? 'bg-violet-600/20 text-violet-400'
+                           : 'text-neutral-500 hover:bg-neutral-800 hover:text-neutral-100'
+                         }`}
+            >
+              <Palette size={20} />
+              <span className="tooltip">Brushes</span>
+            </button>
+
+            <button
               onClick={() => setView('shapes')}
-              className="w-10 h-10 rounded-xl flex items-center justify-center
-                         text-violet-400 hover:bg-violet-900/20 hover:text-violet-300
-                         transition-all duration-200 group relative"
+              className={`w-10 h-10 rounded-xl flex items-center justify-center
+                         transition-all duration-200 group relative
+                         ${view === 'shapes' || shapeTools.some(t => t.id === activeTool)
+                           ? 'bg-violet-600/20 text-violet-400'
+                           : 'text-neutral-500 hover:bg-neutral-800 hover:text-neutral-100'
+                         }`}
             >
               <ShapesIcon size={20} />
               <span className="tooltip">Shapes Library</span>
             </button>
+          </motion.div>
+        ) : view === 'brushes' ? (
+          <motion.div
+            key="brushes"
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 20, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex flex-col items-center gap-2 w-full h-full"
+          >
+            <button
+              onClick={() => setView('main')}
+              className="w-10 h-8 rounded-lg flex items-center justify-center
+                         text-neutral-500 hover:bg-neutral-800 hover:text-white
+                         transition-colors mb-1"
+            >
+              <ChevronLeft size={20} />
+            </button>
+
+            <div className="flex flex-col items-center gap-2 pb-4 overflow-y-auto custom-scrollbar w-full">
+              {brushTools.map(({ id, label, Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => handleToolClick(id)}
+                  title={label}
+                  className={btnClass(id)}
+                >
+                  <Icon size={18} strokeWidth={activeTool === id ? 2.5 : 1.8} />
+                  <span className="tooltip">{label}</span>
+                </button>
+              ))}
+            </div>
           </motion.div>
         ) : (
           <motion.div

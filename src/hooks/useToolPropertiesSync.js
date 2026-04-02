@@ -20,21 +20,25 @@ import {
 } from '../store/slices/toolSlice';
 import { hexToRgba } from '../utils/colorUtils';
 
+// All brush tool IDs that use freeDrawingBrush
+const FREE_BRUSH_TOOLS = [
+  'pencil', 'ink', 'marker', 'chalk', 'ribbon', 'blend',
+  'spray', 'spray-dense', 'circle-brush',
+];
 
 export const useToolPropertiesSync = () => {
-  const activeTool = useSelector(selectActiveTool);
+  const activeTool  = useSelector(selectActiveTool);
   const strokeColor = useSelector(selectStrokeColor);
-  const fillColor = useSelector(selectFillColor);
+  const fillColor   = useSelector(selectFillColor);
   const strokeWidth = useSelector(selectStrokeWidth);
-  const opacity = useSelector(selectOpacity);
+  const opacity     = useSelector(selectOpacity);
   const brushDensity = useSelector(selectBrushDensity);
-  const fontSize = useSelector(selectFontSize);
-  const fontFamily = useSelector(selectFontFamily);
+  const fontSize    = useSelector(selectFontSize);
+  const fontFamily  = useSelector(selectFontFamily);
 
-  // Advanced Props
   const shadowEnabled = useSelector(selectShadowEnabled);
-  const shadowColor = useSelector(selectShadowColor);
-  const shadowBlur = useSelector(selectShadowBlur);
+  const shadowColor   = useSelector(selectShadowColor);
+  const shadowBlur    = useSelector(selectShadowBlur);
   const shadowOffsetX = useSelector(selectShadowOffsetX);
   const shadowOffsetY = useSelector(selectShadowOffsetY);
 
@@ -42,61 +46,71 @@ export const useToolPropertiesSync = () => {
     const canvas = getCanvasInstance();
     if (!canvas) return;
 
-    // 2. Build Shadow Object
-    const shadowObj = shadowEnabled ? new Shadow({
-      color: shadowColor,
-      blur: shadowBlur || 0.1, // Fabric likes a small value if color is present
-      offsetX: shadowOffsetX,
-      offsetY: shadowOffsetY,
-      affectStroke: true,
-    }) : null;
+    // ── Build Shadow Object ──────────────────────────────────────────────────
+    const shadowObj = shadowEnabled
+      ? new Shadow({
+          color: shadowColor,
+          blur: shadowBlur || 0.1,
+          offsetX: shadowOffsetX,
+          offsetY: shadowOffsetY,
+          affectStroke: true,
+        })
+      : null;
 
-    // 1. Update Free Drawing Brush
+    // ── Update Free Drawing Brush live ───────────────────────────────────────
     if (canvas.isDrawingMode && canvas.freeDrawingBrush) {
-      if (['pencil', 'spray', 'circle-brush'].includes(activeTool)) {
-        canvas.freeDrawingBrush.color = hexToRgba(strokeColor, opacity);
-        canvas.freeDrawingBrush.width = strokeWidth;
-        canvas.freeDrawingBrush.shadow = shadowObj;
+      if (FREE_BRUSH_TOOLS.includes(activeTool)) {
+        const brush = canvas.freeDrawingBrush;
+        // All custom + built-in brushes expose .color, .width, .opacity
+        brush.color   = hexToRgba(strokeColor, opacity);
+        brush.width   = strokeWidth;
+        brush.opacity = opacity;
+        brush.shadow  = shadowObj;
 
+        // Spray-specific props
         if (activeTool === 'spray') {
-          canvas.freeDrawingBrush.density = brushDensity;
+          brush.density = brushDensity;
+        }
+        if (activeTool === 'spray-dense') {
+          brush.density = Math.min(brushDensity * 3, 100);
+        }
+
+        // Ribbon spread tracks strokeWidth
+        if (activeTool === 'ribbon') {
+          brush.spread = Math.max(6, strokeWidth * 2.5);
+        }
+
+        // Ink min-width
+        if (activeTool === 'ink') {
+          brush.minWidth = Math.max(1, strokeWidth * 0.25);
         }
       } else if (activeTool === 'eraser') {
-        canvas.freeDrawingBrush.width = strokeWidth * 4;
+        canvas.freeDrawingBrush.width  = strokeWidth * 4;
         canvas.freeDrawingBrush.shadow = null;
-        // Eraser color stays background color
       }
     }
 
-
-    // 3. Update Selected Object(s)
+    // ── Update Selected Canvas Object(s) ─────────────────────────────────────
     const activeObjects = canvas.getActiveObjects();
     if (activeObjects.length > 0) {
-      let isChanged = false;
+      let changed = false;
 
       activeObjects.forEach((obj) => {
-        const baseProps = {
-          opacity,
-          shadow: shadowObj,
-          dirty: true, // Force re-render if cached
-        };
+        const base = { opacity, shadow: shadowObj, dirty: true };
 
-        // ... existing text/path/shape logic
         if (obj.type === 'i-text' || obj.type === 'text' || obj.type === 'FabricText') {
-          obj.set({ ...baseProps, fill: strokeColor, fontSize, fontFamily });
-          isChanged = true;
+          obj.set({ ...base, fill: strokeColor, fontSize, fontFamily });
+          changed = true;
         } else if (obj.type === 'path') {
-          obj.set({ ...baseProps, stroke: strokeColor, strokeWidth });
-          isChanged = true;
+          obj.set({ ...base, stroke: strokeColor, strokeWidth });
+          changed = true;
         } else if (['rect', 'circle', 'triangle', 'line', 'polygon', 'ellipse'].includes(obj.type)) {
-          obj.set({ ...baseProps, fill: fillColor, stroke: strokeColor, strokeWidth });
-          isChanged = true;
+          obj.set({ ...base, fill: fillColor, stroke: strokeColor, strokeWidth });
+          changed = true;
         }
       });
 
-      if (isChanged) {
-        canvas.requestRenderAll();
-      }
+      if (changed) canvas.requestRenderAll();
     }
   }, [
     activeTool,
@@ -114,6 +128,3 @@ export const useToolPropertiesSync = () => {
     shadowOffsetY,
   ]);
 };
-
-
-
