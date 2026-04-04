@@ -8,7 +8,8 @@ import {
   Star, Heart, MoveRight, Hexagon, Orbit,
   CircleDashed, Activity, Shapes as ShapesIcon,
   ChevronLeft, Cloud, Feather, Highlighter, 
-  Brush, Spline, Waves, Palette, Droplets
+  Brush, Spline, Waves, Palette, Droplets,
+  PenTool, Droplet, Wind, CircleDot, Grip
 } from 'lucide-react';
 import { selectActiveTool } from '../../store/slices/canvasSlice';
 import { useDrawingTools }  from '../../hooks/useDrawingTools';
@@ -22,12 +23,16 @@ const mainTools = [
 const brushTools = [
   { id: 'pencil',       label: 'Pencil',           Icon: Pencil },
   { id: 'ink',          label: 'Ink Pen',          Icon: Feather },
+  { id: 'dip-pen',      label: 'Dip Pen',          Icon: PenTool },
   { id: 'marker',       label: 'Marker',           Icon: Highlighter },
   { id: 'chalk',        label: 'Chalk',            Icon: Brush },
+  { id: 'watercolor',   label: 'Watercolor',       Icon: Droplet },
+  { id: 'hard-round',   label: 'Hard Round',       Icon: CircleDot },
+  { id: 'hair',         label: 'Hair (Rake)',      Icon: Grip },
   { id: 'ribbon',       label: 'Ribbon',           Icon: Spline },
   { id: 'blend',        label: 'Smudge / Blend',   Icon: Droplets },
-  { id: 'spray',        label: 'Spray (Soft)',     Icon: Paintbrush },
   { id: 'spray-dense',  label: 'Spray (Dense)',    Icon: Waves },
+  { id: 'airbrush',     label: 'Airbrush',         Icon: Wind },
   { id: 'circle-brush', label: 'Round Brush',      Icon: Disc },
 ];
 
@@ -50,12 +55,16 @@ const toolActionMap = {
   select:         'activateSelect',
   pencil:         'activatePencil',
   ink:            'activateInk',
+  'dip-pen':      'activateDipPen',
   marker:         'activateMarker',
   chalk:          'activateChalk',
+  watercolor:     'activateWatercolor',
+  'hard-round':   'activateHardRound',
+  hair:           'activateHair',
   ribbon:         'activateRibbon',
   blend:          'activateBlend',
-  spray:          'activateSpray',
   'spray-dense':  'activateSprayDense',
+  airbrush:       'activateAirBrush',
   'circle-brush': 'activateCircleBrush',
   eraser:         'activateEraser',
   text:           'addText',

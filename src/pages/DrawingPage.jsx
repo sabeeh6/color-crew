@@ -99,17 +99,19 @@ const DrawingPage = () => {
   useEffect(() => {
     if (sketchData?.sketch) {
       const { _id, title, fabricJSON } = sketchData.sketch;
-      dispatch(setCurrentSketchId(_id));
-      dispatch(setSketchTitle(title));
+      
+      // ONLY load if this is a different sketch or initial load
+      if (_id !== currentSketchId) {
+        dispatch(setCurrentSketchId(_id));
+        dispatch(setSketchTitle(title));
 
-      // Small delay so FabricCanvas has time to mount and set singleton
-      const timer = setTimeout(() => {
-        loadFromJSON(fabricJSON);
-      }, 200);
-
-      return () => clearTimeout(timer);
+        const timer = setTimeout(() => {
+          loadFromJSON(fabricJSON);
+        }, 200);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [sketchData, dispatch, loadFromJSON]);
+  }, [sketchData, dispatch, loadFromJSON, currentSketchId]);
 
   // ── Global keyboard shortcuts ─────────────────────────────────────────────
   const handleKeyDown = useCallback((e) => {

@@ -2,7 +2,6 @@
 export const TOOLS = {
   SELECT:       'select',
   PENCIL:       'pencil',
-  SPRAY:        'spray',
   CIRCLE_BRUSH: 'circle-brush',
   ERASER:       'eraser',
   RECT:         'rect',

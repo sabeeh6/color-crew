@@ -51,8 +51,24 @@ export const useCanvas = () => {
       resizeObserver.observe(parent);
     }
 
+    // Global mouseup cleanup to ensure the drawing state is always reset
+    const globalMouseUp = () => {
+      if (fabricCanvas && fabricCanvas._isCurrentlyDrawing) {
+        fabricCanvas._isCurrentlyDrawing = false;
+        if (fabricCanvas.freeDrawingBrush && typeof fabricCanvas.freeDrawingBrush.onMouseUp === 'function') {
+          try {
+            fabricCanvas.freeDrawingBrush.onMouseUp({});
+          } catch (e) {
+            console.warn('Global mouseup cleanup failed:', e);
+          }
+        }
+      }
+    };
+    window.addEventListener('mouseup', globalMouseUp);
+
     // Cleanup on unmount — required to avoid memory leaks
     return () => {
+      window.removeEventListener('mouseup', globalMouseUp);
       resizeObserver.disconnect();
       destroyCanvasInstance(); // v6: dispose() is async-safe
     };

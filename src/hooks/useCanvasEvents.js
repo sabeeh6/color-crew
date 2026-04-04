@@ -13,8 +13,11 @@ export const useCanvasEvents = () => {
     const canvas = getCanvasInstance();
     if (!canvas) return;
 
-    const onObjectAdded = () => {
-      saveState();
+    const onObjectAdded = (opt) => {
+      // Only save if it's NOT a path (regular paths are handled by onPathCreated)
+      if (opt.target && opt.target.type !== 'path') {
+        saveState();
+      }
       dispatch(setCanUndo(historyStack.current.length > 1));
       dispatch(setCanRedo(false));
     };

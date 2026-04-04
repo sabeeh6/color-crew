@@ -76,10 +76,11 @@ const PropertiesPanel = () => {
   const shadowOffsetY = useSelector(selectShadowOffsetY);
 
   const isBrushTool = [
-    'pencil', 'ink', 'marker', 'chalk', 'ribbon', 
-    'spray', 'spray-dense', 'circle-brush', 'eraser'
+    'pencil', 'ink', 'dip-pen', 'marker', 'chalk', 'watercolor',
+    'hard-round', 'hair', 'ribbon', 
+    'spray-dense', 'airbrush', 'circle-brush', 'eraser'
   ].includes(activeTool);
-  const isSpray = ['spray', 'spray-dense'].includes(activeTool);
+  const isSpray = ['spray-dense', 'airbrush'].includes(activeTool);
   const isShapeTool = [
     'rect', 'circle', 'triangle', 'line', 'star', 'heart', 
     'cloud', 'hexagon', 'ellipse', 'ring', 'arc'

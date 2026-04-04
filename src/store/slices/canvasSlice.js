@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  activeTool: 'select',        // 'select' | 'pencil' | 'spray' | 'circle-brush' | 
+  activeTool: 'select',        // 'select' | 'pencil' | 'circle-brush' |
                                // 'eraser' | 'rect' | 'circle' | 'triangle' | 
                                // 'line' | 'text'
   isDrawingMode: false,
@@ -22,7 +22,7 @@ const canvasSlice = createSlice({
     setActiveTool(state, action) {
       state.activeTool = action.payload;
       // Automatically set drawing mode flag based on tool
-      const drawingTools = ['pencil', 'spray', 'circle-brush', 'eraser'];
+      const drawingTools = ['pencil', 'circle-brush', 'eraser'];
       state.isDrawingMode = drawingTools.includes(action.payload);
     },
 

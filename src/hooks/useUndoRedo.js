@@ -19,25 +19,30 @@ export const useUndoRedo = () => {
     const canvas = getCanvasInstance();
     if (!canvas || isMutatingGlobal) return;
 
-    const snapshot = JSON.stringify(
-      canvas.toJSON(['id', 'name', 'customType'])
-    );
+    // Use a small timeout to debounce multiple rapid calls (e.g. object:added + path:created)
+    // and to ensure Fabric.js has finished internal state updates.
+    if (window._saveTimeout) clearTimeout(window._saveTimeout);
+    
+    window._saveTimeout = setTimeout(() => {
+      const snapshot = JSON.stringify(
+        canvas.toJSON(['id', 'name', 'customType', 'path', 'src', 'shadow'])
+      );
 
-    // Skip if snapshot is identical to the last one (prevents double-save bugs)
-    if (globalHistoryStack.length > 0 && globalHistoryStack[globalHistoryStack.length - 1] === snapshot) {
-      return;
-    }
+      // Skip if snapshot is identical to the last one
+      if (globalHistoryStack.length > 0 && globalHistoryStack[globalHistoryStack.length - 1] === snapshot) {
+        return;
+      }
 
-    globalHistoryStack.push(snapshot);
+      globalHistoryStack.push(snapshot);
 
-    // Cap history to limit memory usage
-    if (globalHistoryStack.length > HISTORY_LIMIT) {
-      globalHistoryStack.shift();
-    }
+      if (globalHistoryStack.length > HISTORY_LIMIT) {
+        globalHistoryStack.shift();
+      }
 
-    globalRedoStack = [];
-    dispatch(setCanUndo(globalHistoryStack.length > 1));
-    dispatch(setCanRedo(false));
+      globalRedoStack = [];
+      dispatch(setCanUndo(globalHistoryStack.length > 1));
+      dispatch(setCanRedo(false));
+    }, 300);
   }, [dispatch]);
 
   const undo = useCallback(async () => {

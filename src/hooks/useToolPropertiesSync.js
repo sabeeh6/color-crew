@@ -23,7 +23,7 @@ import { hexToRgba } from '../utils/colorUtils';
 // All brush tool IDs that use freeDrawingBrush
 const FREE_BRUSH_TOOLS = [
   'pencil', 'ink', 'marker', 'chalk', 'ribbon', 'blend',
-  'spray', 'spray-dense', 'circle-brush',
+  'spray-dense', 'circle-brush',
 ];
 
 export const useToolPropertiesSync = () => {
@@ -67,10 +67,7 @@ export const useToolPropertiesSync = () => {
         brush.opacity = opacity;
         brush.shadow  = shadowObj;
 
-        // Spray-specific props
-        if (activeTool === 'spray') {
-          brush.density = brushDensity;
-        }
+
         if (activeTool === 'spray-dense') {
           brush.density = Math.min(brushDensity * 3, 100);
         }

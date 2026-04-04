@@ -14,7 +14,10 @@ import {
   Polygon,
   Path,
 } from 'fabric';
-import { MarkerBrush, InkBrush, ChalkBrush, RibbonBrush, BlenderBrush } from '../utils/customBrushes';
+import {
+  MarkerBrush, InkBrush, ChalkBrush, RibbonBrush, BlenderBrush,
+  DipPenBrush, WatercolorBrush, AirBrush, HardRoundBrush, HairBrush,
+} from '../utils/customBrushes';
 import { getCanvasInstance } from '../utils/canvasSingleton';
 import { setActiveTool } from '../store/slices/canvasSlice';
 import {
@@ -41,9 +44,19 @@ export const useDrawingTools = () => {
 
   // ── Helper: shared brush setup ─────────────────────────────────────────────
   const _setupBrush = (canvas, brush, toolId) => {
+    // 1. Safe Cleanup: Reset drawing flags on BOTH the canvas and the brush
+    // This prevents "stuck" strokes without firing side-effects like onMouseUp.
+    canvas._isCurrentlyDrawing = false;
+    if (canvas.freeDrawingBrush) {
+      canvas.freeDrawingBrush._isDrawing = false; 
+    }
+
+    // 2. Configure new brush
     brush.color   = hexToRgba(strokeColor, opacity);
     brush.width   = strokeWidth;
     brush.opacity = opacity;
+    
+    // 3. Apply to canvas
     canvas.freeDrawingBrush = brush;
     canvas.isDrawingMode    = true;
     canvas.selection        = false;
@@ -94,30 +107,17 @@ export const useDrawingTools = () => {
     _setupBrush(canvas, brush, 'ribbon');
   }, [strokeColor, strokeWidth, opacity, dispatch]);
 
-  // ── Blender (Smudge) ───────────────────────────────────────────────────────
   const activateBlend = useCallback(() => {
     const canvas = getCanvasInstance();
     if (!canvas) return;
     const brush = new BlenderBrush(canvas);
-    // Blender doesn't use color, but we'll set it just in case of future changes
+    // Blender specific overrides
     brush.color = 'transparent'; 
     brush.width = strokeWidth;
-    brush.opacity = opacity; // mix strength
-    canvas.freeDrawingBrush = brush;
-    canvas.isDrawingMode = true;
-    canvas.selection = false;
-    dispatch(setActiveTool('blend'));
+    brush.opacity = opacity; 
+    _setupBrush(canvas, brush, 'blend');
   }, [strokeWidth, opacity, dispatch]);
 
-  // ── Spray (soft) ───────────────────────────────────────────────────────────
-  const activateSpray = useCallback(() => {
-    const canvas = getCanvasInstance();
-    if (!canvas) return;
-    const brush      = new SprayBrush(canvas);
-    brush.density    = brushDensity;
-    brush.dotWidth   = 1.5;
-    _setupBrush(canvas, brush, 'spray');
-  }, [strokeColor, strokeWidth, opacity, brushDensity, dispatch]);
 
   // ── Spray Dense ────────────────────────────────────────────────────────────
   const activateSprayDense = useCallback(() => {
@@ -136,6 +136,54 @@ export const useDrawingTools = () => {
     if (!canvas) return;
     const brush = new CircleBrush(canvas);
     _setupBrush(canvas, brush, 'circle-brush');
+  }, [strokeColor, strokeWidth, opacity, dispatch]);
+
+  // ── Dip Pen ────────────────────────────────────────────────────────────────
+  const activateDipPen = useCallback(() => {
+    const canvas = getCanvasInstance();
+    if (!canvas) return;
+    const brush      = new DipPenBrush(canvas);
+    brush.minWidth   = Math.max(1, strokeWidth * 0.15);
+    brush.taper      = 0.6;
+    _setupBrush(canvas, brush, 'dip-pen');
+  }, [strokeColor, strokeWidth, opacity, dispatch]);
+
+  // ── Watercolor ─────────────────────────────────────────────────────────────
+  const activateWatercolor = useCallback(() => {
+    const canvas = getCanvasInstance();
+    if (!canvas) return;
+    const brush    = new WatercolorBrush(canvas);
+    brush.spread   = 0.8;
+    brush.wetness  = 0.6;
+    _setupBrush(canvas, brush, 'watercolor');
+  }, [strokeColor, strokeWidth, opacity, dispatch]);
+
+  // ── AirBrush ───────────────────────────────────────────────────────────────
+  const activateAirBrush = useCallback(() => {
+    const canvas = getCanvasInstance();
+    if (!canvas) return;
+    const brush     = new AirBrush(canvas);
+    brush.density   = brushDensity;
+    brush.softness  = 0.7;
+    _setupBrush(canvas, brush, 'airbrush');
+  }, [strokeColor, strokeWidth, opacity, brushDensity, dispatch]);
+
+  // ── Hard Round ─────────────────────────────────────────────────────────────
+  const activateHardRound = useCallback(() => {
+    const canvas = getCanvasInstance();
+    if (!canvas) return;
+    const brush = new HardRoundBrush(canvas);
+    _setupBrush(canvas, brush, 'hard-round');
+  }, [strokeColor, strokeWidth, opacity, dispatch]);
+
+  // ── Hair (Rake) ────────────────────────────────────────────────────────────
+  const activateHair = useCallback(() => {
+    const canvas = getCanvasInstance();
+    if (!canvas) return;
+    const brush      = new HairBrush(canvas);
+    brush.tines      = Math.max(3, Math.floor(strokeWidth / 3));
+    brush.tineWidth  = 1;
+    _setupBrush(canvas, brush, 'hair');
   }, [strokeColor, strokeWidth, opacity, dispatch]);
 
   // ── Eraser ─────────────────────────────────────────────────────────────────
@@ -313,9 +361,13 @@ export const useDrawingTools = () => {
     activateChalk,
     activateRibbon,
     activateBlend,
-    activateSpray,
     activateSprayDense,
     activateCircleBrush,
+    activateDipPen,
+    activateWatercolor,
+    activateAirBrush,
+    activateHardRound,
+    activateHair,
     activateEraser,
     // Navigation
     activateSelect,
