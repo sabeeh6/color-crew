@@ -410,12 +410,18 @@ export class BlenderBrush extends GuardedBrush {
   _renderSmudge(from, to) {
     const ctx = this.canvas.contextTop;
     const r   = this.width / 2;
+    const f   = this.canvas.getRetinaScaling ? this.canvas.getRetinaScaling() : 1;
     ctx.save();
     ctx.beginPath();
     ctx.arc(to.x, to.y, r, 0, Math.PI * 2);
     ctx.clip();
     ctx.globalAlpha = this.opacity ?? 0.4;
-    ctx.drawImage(this._snapshot, from.x - r, from.y - r, r * 2, r * 2, to.x - r, to.y - r, r * 2, r * 2);
+    // Source requires physical pixels (with retina multiplier), Destination requires logical pixels
+    ctx.drawImage(
+      this._snapshot, 
+      (from.x - r) * f, (from.y - r) * f, r * 2 * f, r * 2 * f, 
+      to.x - r, to.y - r, r * 2, r * 2
+    );
     ctx.restore();
   }
 
@@ -424,12 +430,65 @@ export class BlenderBrush extends GuardedBrush {
       this.canvas.clearContext(this.canvas.contextTop);
       return;
     }
-    const dataURL = this.canvas.upperCanvasEl.toDataURL();
-    const img     = new Image();
+    
+    const f = this.canvas.getRetinaScaling ? this.canvas.getRetinaScaling() : 1;
+    
+    // Calculate logical bounding box
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const p of this._points) {
+      if (p.x < minX) minX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y > maxY) maxY = p.y;
+    }
+    const r = this.width / 2;
+    // Pad bounding box for safe capture
+    minX = Math.floor(minX - r - 2);
+    minY = Math.floor(minY - r - 2);
+    maxX = Math.ceil(maxX + r + 2);
+    maxY = Math.ceil(maxY + r + 2);
+    
+    const w = maxX - minX;
+    const h = maxY - minY;
+
+    if (w <= 0 || h <= 0) {
+      this.canvas.clearContext(this.canvas.contextTop);
+      return;
+    }
+
+    // Crop precisely to the bounding box footprint
+    const cropped = document.createElement('canvas');
+    cropped.width = w * f;
+    cropped.height = h * f;
+    const cropCtx = cropped.getContext('2d');
+    
+    try {
+      cropCtx.drawImage(
+        this.canvas.contextTop.canvas,
+        minX * f, minY * f, w * f, h * f,
+        0, 0, w * f, h * f
+      );
+    } catch (e) {
+      this.canvas.clearContext(this.canvas.contextTop);
+      return;
+    }
+    
+    const dataURL = cropped.toDataURL();
+    this.canvas.clearContext(this.canvas.contextTop);
+    
+    const img = new Image();
     img.onload = async () => {
       const { FabricImage } = await import('fabric');
-      const fabricImg = new FabricImage(img, { left: 0, top: 0, selectable: true, evented: true });
-      this.canvas.clearContext(this.canvas.contextTop);
+      const fabricImg = new FabricImage(img, { 
+        left: minX, 
+        top: minY, 
+        originX: 'left',
+        originY: 'top',
+        scaleX: 1 / f,
+        scaleY: 1 / f,
+        selectable: true, 
+        evented: true 
+      });
       this.canvas.add(fabricImg);
       this.canvas.fire('path:created', { path: fabricImg });
       this.canvas.renderAll();
