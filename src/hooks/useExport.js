@@ -1,6 +1,7 @@
 // src/hooks/useExport.js
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import { getCanvasInstance } from '../utils/canvasSingleton';
 import { selectSketchTitle } from '../store/slices/canvasSlice';
@@ -63,10 +64,14 @@ export const useExport = () => {
         fabricJSON,
         thumbnailBase64,
       }).unwrap();
+      
+      console.log('🟢 API Response: Sketch saved successfully to Backend!');
+      toast.success('Sketch saved perfectly to your cloud!');
 
       dispatch(setLastSavedAt(new Date().toISOString()));
     } catch (err) {
-      console.error('Save failed:', err);
+      console.error('🔴 Save failed API Error:', err);
+      toast.error(err?.data?.message || 'Failed to save sketch to cloud Server Error!');
     } finally {
       dispatch(setIsSaving(false));
     }

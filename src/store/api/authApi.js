@@ -16,11 +16,13 @@ export const authApi = createApi({
         method: 'POST',
         body: credentials,
       }),
-      // Side effect: store credentials in Redux after login
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
-          const { data } = await queryFulfilled;
-          dispatch(setCredentials({ user: data.user, token: data.token }));
+          const { data: responseBody } = await queryFulfilled;
+          // The exact backend shape is: responseBody.data.userData and responseBody.data.token
+          if (responseBody && responseBody.data) {
+            dispatch(setCredentials({ user: responseBody.data.userData, token: responseBody.data.token }));
+          }
         } catch (error) {
           console.error('Login failed:', error);
         }

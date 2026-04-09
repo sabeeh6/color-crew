@@ -1,15 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// Rehydrate from localStorage on app boot
-const tokenFromStorage = localStorage.getItem('colorCrewToken') || null;
+// Rehydrate from sessionStorage on app boot
+const tokenFromStorage = sessionStorage.getItem('colorCrewToken') || null;
 let userFromStorage = null;
 try {
-  const storedUser = localStorage.getItem('colorCrewUser');
+  const storedUser = sessionStorage.getItem('colorCrewUser');
   if (storedUser && storedUser !== 'undefined') {
     userFromStorage = JSON.parse(storedUser);
   }
 } catch (error) {
-  console.error('Failed to parse user from localStorage:', error);
+  console.error('Failed to parse user from sessionStorage:', error);
 }
 
 
@@ -31,17 +31,17 @@ const authSlice = createSlice({
       state.token = token;
       state.isAuthenticated = true;
       state.error = null;
-      // Persist to localStorage
-      localStorage.setItem('colorCrewToken', token);
-      localStorage.setItem('colorCrewUser', JSON.stringify(user));
+      // Persist to sessionStorage so it clears on tab close
+      sessionStorage.setItem('colorCrewToken', token);
+      sessionStorage.setItem('colorCrewUser', JSON.stringify(user));
     },
 
     logout(state) {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      localStorage.removeItem('colorCrewToken');
-      localStorage.removeItem('colorCrewUser');
+      sessionStorage.removeItem('colorCrewToken');
+      sessionStorage.removeItem('colorCrewUser');
     },
 
     setAuthLoading(state, action) {
