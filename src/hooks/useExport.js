@@ -1,6 +1,7 @@
 // src/hooks/useExport.js
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import { getCanvasInstance } from '../utils/canvasSingleton';
@@ -10,6 +11,7 @@ import { setIsSaving, setLastSavedAt } from '../store/slices/canvasSlice';
 
 export const useExport = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const sketchTitle = useSelector(selectSketchTitle);
   const [saveSketchMutation] = useSaveSketchMutation();
 
@@ -58,17 +60,23 @@ export const useExport = () => {
         multiplier: 0.3, // low-res thumbnail
       });
 
-      await saveSketchMutation({
+      const response = await saveSketchMutation({
         sketchId,
         title: sketchTitle,
         fabricJSON,
         thumbnailBase64,
       }).unwrap();
       
-      console.log('🟢 API Response: Sketch saved successfully to Backend!');
+      console.log('🟢 API Response: Sketch saved successfully!', response);
       toast.success('Sketch saved perfectly to your cloud!');
 
       dispatch(setLastSavedAt(new Date().toISOString()));
+      
+      // If it was a NEW sketch (no ID), update URL to newly created ID
+      // This allows 'Update' mode without leaving the page
+      if (!sketchId && response?._id) {
+        navigate(`/drawing/${response._id}`, { replace: true });
+      }
     } catch (err) {
       console.error('🔴 Save failed API Error:', err);
       toast.error(err?.data?.message || 'Failed to save sketch to cloud Server Error!');
@@ -79,10 +87,17 @@ export const useExport = () => {
 
   // Load a sketch from Fabric JSON
   const loadFromJSON = useCallback(async (json) => {
+    console.log("🔍 [useExport] loadFromJSON called with:", typeof json, json ? "Has Data" : "Empty");
     const canvas = getCanvasInstance();
-    if (!canvas) return;
+    console.log("🔍 [useExport] Canvas Instance is:", canvas ? "Present" : "NULL");
+    if (!canvas) {
+      console.warn("⚠️ Canvas instance was null inside loadFromJSON!");
+      return;
+    }
     // v6: loadFromJSON is Promise-based
+    console.log("🔍 [useExport] Awaiting canvas.loadFromJSON...");
     await canvas.loadFromJSON(json);
+    console.log("🔍 [useExport] loadFromJSON finished. Calling renderAll()..");
     canvas.renderAll();
   }, []);
 

@@ -49,9 +49,10 @@ const CanvasToolbar = () => {
         <button
           onClick={() => navigate('/dashboard')}
           title="Back to Dashboard"
-          className="flex items-center justify-center w-8 h-8 rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors"
+          className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors"
         >
           <ArrowLeft size={18} />
+          <span className="text-sm font-medium">Back</span>
         </button>
 
         <div className="w-7 h-7 bg-violet-600 rounded-md flex items-center justify-center">

@@ -82,7 +82,10 @@ export const sketchApi = createApi({
         body,
       }),
       // Automatically refetch sketch list after save
-      invalidatesTags: [{ type: 'Sketch', id: 'LIST' }],
+      invalidatesTags: (result, error, body) => 
+        body.sketchId 
+          ? [{ type: 'Sketch', id: body.sketchId }, { type: 'Sketch', id: 'LIST' }]
+          : [{ type: 'Sketch', id: 'LIST' }],
     }),
 
     // DELETE sketch

@@ -97,18 +97,27 @@ const DrawingPage = () => {
     useGetSketchByIdQuery(sketchId, { skip: !sketchId });
 
   useEffect(() => {
-    if (sketchData?.sketch) {
-      const { _id, title, fabricJSON } = sketchData.sketch;
+    console.log("🟡 DrawingPage UseEffect triggered");
+    console.log("🟡 SketchData:", sketchData);
+    
+    // Backend returns the sketch document directly, NOT nested in a { sketch: ... } object
+    if (sketchData && sketchData._id) {
+      const { _id, title, fabricJSON } = sketchData;
+      
+      console.log("🟠 Found Sketch ID:", _id, "Current Redux ID:", currentSketchId);
       
       // ONLY load if this is a different sketch or initial load
       if (_id !== currentSketchId) {
+        console.log("🟢 Setting up Redux and planning to load JSON into Canvas...");
         dispatch(setCurrentSketchId(_id));
         dispatch(setSketchTitle(title));
 
         const timer = setTimeout(() => {
-          loadFromJSON(fabricJSON);
-        }, 200);
-        return () => clearTimeout(timer);
+          console.log("🔵 Timer fired. Loading JSON into canvas!");
+          loadFromJSON(fabricJSON).catch(e => console.error("🔴 Error loading JSON inside Fabric:", e));
+          toast.success("Sketch loaded successfully!");
+        }, 500); // increased timer slightly to ensure canvas is mounted
+        
       }
     }
   }, [sketchData, dispatch, loadFromJSON, currentSketchId]);
@@ -138,6 +147,14 @@ const DrawingPage = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
+
+  // Cleanup Sketch ID on unmount so clicking the same sketch again reloads it
+  useEffect(() => {
+    return () => {
+      dispatch(setCurrentSketchId(null));
+      dispatch(setSketchTitle('Untitled Sketch'));
+    };
+  }, [dispatch]);
 
   // ── Handle clear confirm modal ─────────────────────────────────────────────
   const handleClearConfirm = () => {
