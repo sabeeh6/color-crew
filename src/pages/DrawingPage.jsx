@@ -35,6 +35,10 @@ import { useGetSketchByIdQuery } from '../store/api/sketchApi';
 
 import toast from 'react-hot-toast';
 
+import { socket } from '../utils/socket';
+import RoomFullError from '../components/ui/RoomFullError';
+import { useState } from 'react';
+
 // ─── Clear Confirm Modal ──────────────────────────────────────────────────────
 const ClearConfirmModal = ({ onConfirm, onCancel }) => (
   <motion.div
@@ -91,6 +95,7 @@ const DrawingPage = () => {
 
   const { loadFromJSON }  = useExport();
   const { clearCanvas }   = useDrawingTools();
+  const [isRoomFull, setIsRoomFull] = useState(false);
 
   // ── Load existing sketch if sketchId param is present ─────────────────────
   const { data: sketchData, isLoading: loadingSketch } =
@@ -121,6 +126,34 @@ const DrawingPage = () => {
       }
     }
   }, [sketchData, dispatch, loadFromJSON, currentSketchId]);
+
+  // ── Socket Connection & Collaboration ─────────────────────────────────────
+  useEffect(() => {
+    if (!sketchId) return;
+
+    socket.connect();
+    
+    socket.emit("join-room", sketchId, (response) => {
+      if (!response.success && response.message === "Room is full") {
+        setIsRoomFull(true);
+      }
+    });
+
+    const handleCanvasUpdate = (fabricJSON) => {
+      // Temporarily disable undo/redo saving while remote changes load
+      window.__isRemoteUpdate = true;
+      loadFromJSON(fabricJSON).finally(() => {
+        window.__isRemoteUpdate = false;
+      });
+    };
+
+    socket.on("on-canvas-update", handleCanvasUpdate);
+
+    return () => {
+      socket.off("on-canvas-update", handleCanvasUpdate);
+      socket.disconnect();
+    };
+  }, [sketchId, loadFromJSON]);
 
   // ── Global keyboard shortcuts ─────────────────────────────────────────────
   const handleKeyDown = useCallback((e) => {
@@ -162,6 +195,10 @@ const DrawingPage = () => {
     dispatch(closeModal());
     toast.success('Canvas cleared');
   };
+
+  if (isRoomFull) {
+    return <RoomFullError />;
+  }
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-neutral-950">

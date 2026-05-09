@@ -1,8 +1,9 @@
 import { useDispatch, useSelector } from 'react-redux';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Undo2, Redo2, Save, Download, FileText,
-  Trash2, Palette, Loader2, ArrowLeft
+  Trash2, Palette, Loader2, ArrowLeft, Share2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -17,6 +18,7 @@ import { useUndoRedo }  from '../../hooks/useUndoRedo';
 import { useExport }    from '../../hooks/useExport';
 import { useDrawingTools } from '../../hooks/useDrawingTools';
 import { openModal }    from '../../store/slices/uiSlice';
+import ShareModal from '../modals/ShareModal';
 
 const CanvasToolbar = () => {
   const navigate   = useNavigate();
@@ -26,6 +28,8 @@ const CanvasToolbar = () => {
   const isSaving   = useSelector(selectIsSaving);
   const title      = useSelector(selectSketchTitle);
   const sketchId   = useSelector(selectCurrentSketchId);
+
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const { undo, redo }          = useUndoRedo();
   const { exportPNG, exportPDF, saveToCloud } = useExport();
@@ -103,8 +107,17 @@ const CanvasToolbar = () => {
         </button>
       </div>
 
-      {/* ── Right: Save + Export ─────────────────────────────────────── */}
+      {/* ── Right: Save + Export + Share ─────────────────────────────────────── */}
       <div className="flex items-center gap-2">
+        <button
+          onClick={() => setIsShareModalOpen(true)}
+          title="Share Sketch"
+          className={`${btnBase} text-white bg-blue-600 hover:bg-blue-500`}
+        >
+          <Share2 size={15} />
+          <span className="hidden sm:inline">Share</span>
+        </button>
+
         <button
           onClick={exportPNG}
           title="Export PNG"
@@ -138,6 +151,8 @@ const CanvasToolbar = () => {
           </span>
         </button>
       </div>
+
+      {isShareModalOpen && <ShareModal onClose={() => setIsShareModalOpen(false)} />}
     </motion.header>
   );
 };
