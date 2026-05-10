@@ -24,6 +24,7 @@ import {
   setSketchTitle,
   selectCurrentSketchId,
 } from '../store/slices/canvasSlice';
+import { selectCurrentUser } from '../store/slices/authSlice';
 
 // Hooks
 import { useExport }      from '../hooks/useExport';
@@ -96,6 +97,10 @@ const DrawingPage = () => {
   const { loadFromJSON }  = useExport();
   const { clearCanvas }   = useDrawingTools();
   const [isRoomFull, setIsRoomFull] = useState(false);
+  const [cursors, setCursors] = useState({});
+
+  const currentUser = useSelector(selectCurrentUser);
+  const username = currentUser?.name || currentUser?.username || 'Guest';
 
   // ── Load existing sketch if sketchId param is present ─────────────────────
   const { data: sketchData, isLoading: loadingSketch } =
@@ -147,10 +152,27 @@ const DrawingPage = () => {
       });
     };
 
+    const handleCursorMove = (data) => {
+      if (data.socketId === socket.id) return;
+      setCursors((prev) => ({ ...prev, [data.socketId]: data }));
+    };
+
+    const handleUserDisconnected = (socketId) => {
+      setCursors((prev) => {
+        const newCursors = { ...prev };
+        delete newCursors[socketId];
+        return newCursors;
+      });
+    };
+
     socket.on("on-canvas-update", handleCanvasUpdate);
+    socket.on("on-cursor-move", handleCursorMove);
+    socket.on("user-disconnected", handleUserDisconnected);
 
     return () => {
       socket.off("on-canvas-update", handleCanvasUpdate);
+      socket.off("on-cursor-move", handleCursorMove);
+      socket.off("user-disconnected", handleUserDisconnected);
       socket.disconnect();
     };
   }, [sketchId, loadFromJSON]);
@@ -200,8 +222,37 @@ const DrawingPage = () => {
     return <RoomFullError />;
   }
 
+  const handleMouseMove = (e) => {
+    if (!sketchId || !socket.connected) return;
+    socket.emit("cursor-move", {
+      roomId: sketchId,
+      socketId: socket.id,
+      username,
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-neutral-950">
+    <div 
+      className="flex flex-col h-screen w-screen overflow-hidden bg-neutral-950 relative"
+      onMouseMove={handleMouseMove}
+    >
+      {/* ── Render Cursors ── */}
+      {Object.values(cursors).map((c) => (
+        <div
+          key={c.socketId}
+          className="pointer-events-none fixed z-50 transition-all duration-75 ease-linear"
+          style={{ left: c.x, top: c.y }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7871 12.3673H5.65376Z" fill="#a78bfa" stroke="white" strokeWidth="2"/>
+          </svg>
+          <div className="bg-violet-500 text-white text-xs px-2 py-1 rounded shadow-md mt-1 ml-3 whitespace-nowrap">
+            {c.username}
+          </div>
+        </div>
+      ))}
 
       {/* ── Top Toolbar ──────────────────────────────────────────────── */}
       <CanvasToolbar />
