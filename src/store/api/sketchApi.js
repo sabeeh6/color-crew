@@ -21,26 +21,21 @@ const baseQuery = fetchBaseQuery({
 
 // Professional standard interceptor for API calls
 const baseQueryWithReauth = async (args, api, extraOptions) => {
-  // 1. Check if token even exists before making restricted calls
-  const state = api.getState();
-  const token = state.auth.token;
-  
-  if (!token) {
-    toast.error('You must be logged in to do this.');
-    api.dispatch(logout());
-    window.location.href = '/login';
-    return { error: { status: 401, data: 'No token found' } };
-  }
-
-  // 2. Make the actual API request
+  // 1. Make the actual API request
   let result = await baseQuery(args, api, extraOptions);
 
-  // 3. Catch Backend auth rejections (like expired token 401 or 403)
+  // 2. Catch Backend auth rejections (like expired token 401 or 403)
   if (result.error && (result.error.status === 401 || result.error.status === 403)) {
-    console.error("🔴 [AUTH ERROR] Token expired or invalid, auto-logging out...");
-    toast.error('Session expired. Please log in again.');
-    api.dispatch(logout()); // Clear dead tokens
-    window.location.href = '/login'; // Redirect home / login gracefully
+    // Only redirect if we are NOT on a sharing page (DrawingPage)
+    // or if the user is trying to perform a restricted action (like saving)
+    const isDrawingPage = window.location.pathname.startsWith('/drawing/');
+    
+    if (!isDrawingPage || result.error.status === 403) {
+      console.error("🔴 [AUTH ERROR] Unauthorized, auto-logging out...");
+      toast.error('Session expired or unauthorized. Please log in.');
+      api.dispatch(logout());
+      window.location.href = '/login';
+    }
   }
 
   return result;
