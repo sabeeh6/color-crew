@@ -20,6 +20,9 @@ const uiSlice = createSlice({
     togglePropertiesPanel(state) {
       state.isPropertiesPanelOpen = !state.isPropertiesPanelOpen;
     },
+    setPropertiesPanelOpen(state, action) {
+      state.isPropertiesPanelOpen = action.payload;
+    },
     toggleLayersPanel(state) {
       state.isLayersPanelOpen = !state.isLayersPanelOpen;
     },
@@ -38,6 +41,7 @@ const uiSlice = createSlice({
 export const {
   toggleToolsPanel,
   togglePropertiesPanel,
+  setPropertiesPanelOpen,
   toggleLayersPanel,
   toggleAiPanel,
   openModal,

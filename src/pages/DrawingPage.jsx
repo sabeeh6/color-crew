@@ -39,6 +39,8 @@ import toast from 'react-hot-toast';
 import { socket } from '../utils/socket';
 import RoomFullError from '../components/ui/RoomFullError';
 import { useState } from 'react';
+import ChatPanel from '../components/chat/ChatPanel';
+import { addMessage, selectIsChatOpen } from '../store/slices/chatSlice';
 
 // ─── Clear Confirm Modal ──────────────────────────────────────────────────────
 const ClearConfirmModal = ({ onConfirm, onCancel }) => (
@@ -93,6 +95,7 @@ const DrawingPage = () => {
   const isPropertiesPanelOpen = useSelector(selectIsPropertiesPanelOpen);
   const activeModal           = useSelector(selectActiveModal);
   const currentSketchId       = useSelector(selectCurrentSketchId);
+  const isChatOpen            = useSelector(selectIsChatOpen);
 
   const { loadFromJSON }  = useExport();
   const { clearCanvas }   = useDrawingTools();
@@ -165,14 +168,23 @@ const DrawingPage = () => {
       });
     };
 
+    const handleChatMessage = (data) => {
+      // Only add if it's from someone else (since we add locally for ourselves)
+      if (data.sender !== username) {
+        dispatch(addMessage(data));
+      }
+    };
+
     socket.on("on-canvas-update", handleCanvasUpdate);
     socket.on("on-cursor-move", handleCursorMove);
     socket.on("user-disconnected", handleUserDisconnected);
+    socket.on("on-chat-message", handleChatMessage);
 
     return () => {
       socket.off("on-canvas-update", handleCanvasUpdate);
       socket.off("on-cursor-move", handleCursorMove);
       socket.off("user-disconnected", handleUserDisconnected);
+      socket.off("on-chat-message", handleChatMessage);
       socket.disconnect();
     };
   }, [sketchId, loadFromJSON]);
@@ -295,17 +307,31 @@ const DrawingPage = () => {
         </div>
 
 
-        {/* Right: Properties Panel */}
-        <AnimatePresence>
-          {isPropertiesPanelOpen && (
+        {/* Right Area: Properties or Chat Sidebar */}
+        <AnimatePresence mode="wait">
+          {isPropertiesPanelOpen && !isChatOpen && (
             <motion.div
+              key="properties-panel"
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: 240, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="overflow-hidden shrink-0"
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="overflow-hidden shrink-0 border-l border-neutral-800"
             >
               <PropertiesPanel />
+            </motion.div>
+          )}
+
+          {isChatOpen && !isPropertiesPanelOpen && (
+            <motion.div
+              key="chat-panel"
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 240, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="overflow-hidden shrink-0 border-l border-neutral-800"
+            >
+              <ChatPanel />
             </motion.div>
           )}
         </AnimatePresence>

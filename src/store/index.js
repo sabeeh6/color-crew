@@ -3,8 +3,10 @@ import canvasReducer from './slices/canvasSlice';
 import toolReducer from './slices/toolSlice';
 import authReducer from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
+import chatReducer from './slices/chatSlice';
 import { sketchApi } from './api/sketchApi';
 import { authApi } from './api/authApi';
+import { chatApi } from './api/chatApi';
 
 export const store = configureStore({
   reducer: {
@@ -13,10 +15,12 @@ export const store = configureStore({
     tool: toolReducer,
     auth: authReducer,
     ui: uiReducer,
+    chat: chatReducer,
 
     // RTK Query API reducers (auto-generated)
     [sketchApi.reducerPath]: sketchApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
+    [chatApi.reducerPath]: chatApi.reducer,
   },
 
   middleware: (getDefaultMiddleware) =>
@@ -28,7 +32,8 @@ export const store = configureStore({
       },
     })
       .concat(sketchApi.middleware)
-      .concat(authApi.middleware),
+      .concat(authApi.middleware)
+      .concat(chatApi.middleware),
 });
 
 // TypeScript-ready export types (useful if you migrate to TS later)

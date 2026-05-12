@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Undo2, Redo2, Save, Download, FileText,
-  Trash2, Palette, Loader2, ArrowLeft, Share2
+  Trash2, Palette, Loader2, ArrowLeft, Share2,
+  PanelRightClose, PanelRightOpen, MessageSquare
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -17,7 +18,17 @@ import {
 import { useUndoRedo }  from '../../hooks/useUndoRedo';
 import { useExport }    from '../../hooks/useExport';
 import { useDrawingTools } from '../../hooks/useDrawingTools';
-import { openModal }    from '../../store/slices/uiSlice';
+import { 
+  openModal, 
+  togglePropertiesPanel, 
+  selectIsPropertiesPanelOpen,
+  setPropertiesPanelOpen 
+} from '../../store/slices/uiSlice';
+import { 
+  setIsOpen as setChatOpen, 
+  selectIsChatOpen, 
+  selectChatUnreadCount 
+} from '../../store/slices/chatSlice';
 import ShareModal from '../modals/ShareModal';
 
 const CanvasToolbar = () => {
@@ -28,6 +39,9 @@ const CanvasToolbar = () => {
   const isSaving   = useSelector(selectIsSaving);
   const title      = useSelector(selectSketchTitle);
   const sketchId   = useSelector(selectCurrentSketchId);
+  const isPropertiesPanelOpen = useSelector(selectIsPropertiesPanelOpen);
+  const isChatOpen = useSelector(selectIsChatOpen);
+  const unreadCount = useSelector(selectChatUnreadCount);
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
@@ -39,6 +53,20 @@ const CanvasToolbar = () => {
     flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
     transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed
   `;
+
+  const handleToggleProperties = () => {
+    if (!isPropertiesPanelOpen) {
+      dispatch(setChatOpen(false));
+    }
+    dispatch(togglePropertiesPanel());
+  };
+
+  const handleToggleChat = () => {
+    if (!isChatOpen) {
+      dispatch(setPropertiesPanelOpen(false));
+    }
+    dispatch(setChatOpen(!isChatOpen));
+  };
 
   return (
     <motion.header
@@ -149,6 +177,29 @@ const CanvasToolbar = () => {
           <span className="hidden sm:inline">
             {isSaving ? 'Saving…' : 'Save'}
           </span>
+        </button>
+
+        <div className="w-px h-6 bg-neutral-700 mx-1" />
+
+        <button
+          onClick={handleToggleChat}
+          title={isChatOpen ? "Hide Chat" : "Show Chat"}
+          className={`relative ${btnBase} ${isChatOpen ? 'text-violet-400 bg-violet-600/10' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'}`}
+        >
+          <MessageSquare size={18} />
+          {unreadCount > 0 && !isChatOpen && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-neutral-900 animate-pulse">
+              {unreadCount}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={handleToggleProperties}
+          title={isPropertiesPanelOpen ? "Hide Properties" : "Show Properties"}
+          className={`${btnBase} ${isPropertiesPanelOpen ? 'text-violet-400 bg-violet-600/10' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'}`}
+        >
+          {isPropertiesPanelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
         </button>
       </div>
 
