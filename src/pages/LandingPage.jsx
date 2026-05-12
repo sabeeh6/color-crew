@@ -10,7 +10,6 @@ const features = [
   { Icon: Palette, title: 'Professional Tools',   desc: 'Pencil, spray, shapes, eraser, text — everything a sketch artist needs.' },
   { Icon: Zap,     title: 'Instant Export',        desc: 'Export your work as high-resolution PNG or PDF in one click.' },
   { Icon: Users,   title: 'Collaborate (Phase 2)', desc: 'Draw together with your team in real-time via Socket.io.' },
-  { Icon: Brain,   title: 'AI Suggestions (Phase 3)', desc: 'Let AI analyze symmetry, proportions and suggest improvements.' },
 ];
 
 const FeatureCard = ({ Icon, title, desc }) => (
@@ -104,7 +103,7 @@ const LandingPage = () => {
           Everything You Need
         </motion.h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
           {features.map((f, i) => (
             <motion.div
               key={f.title}
