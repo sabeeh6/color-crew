@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Palette, Zap, Users, Brain, ArrowRight, CheckCircle,
+  Palette, Zap, Users, Brain, ArrowRight, CheckCircle, MessageSquare
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated } from '../store/slices/authSlice';
@@ -10,6 +10,7 @@ const features = [
   { Icon: Palette, title: 'Professional Tools',   desc: 'Pencil, spray, shapes, eraser, text — everything a sketch artist needs.' },
   { Icon: Zap,     title: 'Instant Export',        desc: 'Export your work as high-resolution PNG or PDF in one click.' },
   { Icon: Users,   title: 'Collaborate (Phase 2)', desc: 'Draw together with your team in real-time via Socket.io.' },
+  { Icon: MessageSquare, title: 'Real-time Chat', desc: 'Communicate seamlessly with your team while you draw together.' },
 ];
 
 const FeatureCard = ({ Icon, title, desc }) => (
@@ -103,7 +104,7 @@ const LandingPage = () => {
           Everything You Need
         </motion.h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
           {features.map((f, i) => (
             <motion.div
               key={f.title}

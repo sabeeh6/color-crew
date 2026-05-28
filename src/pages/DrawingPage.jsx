@@ -38,9 +38,10 @@ import toast from 'react-hot-toast';
 
 import { socket } from '../utils/socket';
 import RoomFullError from '../components/ui/RoomFullError';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import ChatPanel from '../components/chat/ChatPanel';
 import { addMessage, selectIsChatOpen } from '../store/slices/chatSlice';
+import CanvasReactions from '../components/canvas/CanvasReactions';
 
 // ─── Clear Confirm Modal ──────────────────────────────────────────────────────
 const ClearConfirmModal = ({ onConfirm, onCancel }) => (
@@ -86,6 +87,73 @@ const ClearConfirmModal = ({ onConfirm, onCancel }) => (
   </motion.div>
 );
 
+// ─── Floating Reaction Component ─────────────────────────────────────────────
+const FloatingReaction = ({ reaction, onComplete }) => {
+  const isComment = reaction.comment !== null && reaction.comment !== undefined;
+
+  // Calculate how far to travel to reach the vertical middle of the screen
+  const travelToMiddle = reaction.y - (window.innerHeight / 2);
+  // Calculate how far to travel to reach near the top of the screen (with padding)
+  const travelToTop = reaction.y - 120;
+
+  if (isComment) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, y: 20 }}
+        animate={{ 
+          opacity: [0, 1, 1, 1, 0],
+          scale: [0.8, 1, 1, 1, 0.9],
+          y: -travelToMiddle 
+        }}
+        transition={{ 
+          duration: 10, 
+          times: [0, 0.05, 0.5, 0.92, 1],
+          ease: "easeOut" 
+        }}
+        onAnimationComplete={onComplete}
+        style={{ left: reaction.x, top: reaction.y }}
+        className="fixed pointer-events-none transform -translate-x-1/2 -translate-y-full flex flex-col items-center z-50"
+      >
+        <div className="bg-neutral-900/95 border border-neutral-800 rounded-xl px-3 py-1.5 shadow-2xl flex items-center gap-2 max-w-xs backdrop-blur-md">
+          {reaction.emoji && <span className="text-sm select-none">{reaction.emoji}</span>}
+          <div className="flex flex-col">
+            <span className="text-[9px] font-bold text-violet-400 uppercase tracking-wider">{reaction.username}</span>
+            <span className="text-[11px] text-white leading-tight font-medium">{reaction.comment}</span>
+          </div>
+        </div>
+        {/* Little bubble pointer arrow */}
+        <div className="w-2.5 h-2.5 bg-neutral-900 border-r border-b border-neutral-800 rotate-45 -mt-1.5" />
+      </motion.div>
+    );
+  }
+
+  // Pure emoji reaction — floats all the way to the top of the screen
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.4, y: 10, x: 0 }}
+      animate={{ 
+        opacity: [0, 1, 1, 0],
+        scale: [0.4, 1.3, 1, 0.7],
+        y: -travelToTop,
+        x: [0, -15, 15, -10, 10, 0]
+      }}
+      transition={{ 
+        duration: 3.5,
+        times: [0, 0.1, 0.8, 1],
+        ease: "easeOut" 
+      }}
+      onAnimationComplete={onComplete}
+      style={{ left: reaction.x, top: reaction.y }}
+      className="fixed pointer-events-none transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-50 select-none"
+    >
+      <div className="text-3xl filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.5)]">{reaction.emoji}</div>
+      <span className="bg-neutral-900/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded border border-neutral-800 shadow-md mt-1 scale-75 whitespace-nowrap backdrop-blur-sm">
+        {reaction.username}
+      </span>
+    </motion.div>
+  );
+};
+
 // ─── DrawingPage ──────────────────────────────────────────────────────────────
 const DrawingPage = () => {
   const dispatch   = useDispatch();
@@ -101,6 +169,9 @@ const DrawingPage = () => {
   const { clearCanvas }   = useDrawingTools();
   const [isRoomFull, setIsRoomFull] = useState(false);
   const [cursors, setCursors] = useState({});
+  const [reactions, setReactions] = useState([]);
+  const myMousePos = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+  const reactionIdCounter = useRef(0);
 
   const currentUser = useSelector(selectCurrentUser);
   const username = currentUser?.name || currentUser?.username || 'Guest';
@@ -175,16 +246,27 @@ const DrawingPage = () => {
       }
     };
 
+    const handleReaction = (data) => {
+      // Ensure every incoming reaction has a unique local id for React rendering
+      const reactionWithId = {
+        ...data,
+        id: data.id || `remote-${Date.now()}-${++reactionIdCounter.current}`
+      };
+      setReactions((prev) => [...prev, reactionWithId]);
+    };
+
     socket.on("on-canvas-update", handleCanvasUpdate);
     socket.on("on-cursor-move", handleCursorMove);
     socket.on("user-disconnected", handleUserDisconnected);
     socket.on("on-chat-message", handleChatMessage);
+    socket.on("on-reaction", handleReaction);
 
     return () => {
       socket.off("on-canvas-update", handleCanvasUpdate);
       socket.off("on-cursor-move", handleCursorMove);
       socket.off("user-disconnected", handleUserDisconnected);
       socket.off("on-chat-message", handleChatMessage);
+      socket.off("on-reaction", handleReaction);
       socket.disconnect();
     };
   }, [sketchId, loadFromJSON]);
@@ -235,6 +317,7 @@ const DrawingPage = () => {
   }
 
   const handleMouseMove = (e) => {
+    myMousePos.current = { x: e.clientX, y: e.clientY };
     if (!sketchId || !socket.connected) return;
     socket.emit("cursor-move", {
       roomId: sketchId,
@@ -245,11 +328,49 @@ const DrawingPage = () => {
     });
   };
 
+  const sendReaction = ({ emoji, comment }) => {
+    if (!sketchId) return;
+
+    const uniqueId = `local-${Date.now()}-${++reactionIdCounter.current}`;
+
+    const reactionData = {
+      id: uniqueId,
+      roomId: sketchId,
+      socketId: socket.id,
+      emoji,
+      comment,
+      username,
+      x: myMousePos.current.x,
+      y: myMousePos.current.y
+    };
+
+    // Trigger locally
+    setReactions((prev) => [...prev, reactionData]);
+
+    // Send to other users in the room
+    if (socket.connected) {
+      socket.emit("send-reaction", reactionData);
+    }
+  };
+
   return (
     <div 
       className="flex flex-col h-screen w-screen overflow-hidden bg-neutral-950 relative"
       onMouseMove={handleMouseMove}
     >
+      {/* ── Render Floating Reactions ── */}
+      <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
+        {reactions.map((r) => (
+          <FloatingReaction
+            key={r.id}
+            reaction={r}
+            onComplete={() => {
+              setReactions((prev) => prev.filter((item) => item.id !== r.id));
+            }}
+          />
+        ))}
+      </div>
+
       {/* ── Render Cursors ── */}
       {Object.values(cursors).map((c) => (
         <div
@@ -301,6 +422,9 @@ const DrawingPage = () => {
           ) : (
             <FabricCanvas />
           )}
+
+          {/* Ephemeral Canvas Reactions Component */}
+          <CanvasReactions onSendReaction={sendReaction} />
 
           {/* Zoom Controls (absolute bottom-right of canvas area) */}
           <CanvasZoomControls />
